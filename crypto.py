@@ -48,7 +48,7 @@ def train_model(df : pd.DataFrame, data_train : pd.DataFrame, scaler : MinMaxSca
 def make_model(x_train : np.array, y_train : np.array):
     try:
         model = Sequential() # initializing the type of model
-        model.add(LSTM(units= 50, activation= 'relu', return_sequences= True, input_shape= (x_train.shape[1], 1))) # adding first layer with ipu
+        model.add(LSTM(units= 50, activation= 'relu', return_sequences= True, input_shape= (x_train.shape[1], x_train.shape[2]))) # adding first layer with ipu
         model.add(Dropout(0.2))
 
         model.add(LSTM(units= 60, activation= 'relu', return_sequences= True))
@@ -95,9 +95,9 @@ def test_model(past_100_days : pd.DataFrame, data_test : pd.DataFrame, scaler : 
 
     return x_test, y_test
 
-def make_prediction(loaded_model, x_test : np.array, y_test : np.array , scaler : MinMaxScaler):
+def make_prediction(model, x_test : np.array, y_test : np.array , scaler : MinMaxScaler):
     #Making Predictions
-    y_predict = loaded_model.predict(x_test)
+    y_predict = model.predict(x_test)
 
     scaler = scaler.scale_
 
@@ -164,22 +164,29 @@ if __name__ == "__main__":
 
     x_train, y_train = train_model(df, data_train, scaler)
 
-    # model = make_model(x_train, y_train)
+    x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+
+    model = make_model(x_train, y_train)
 
     # to load model
-    model = load_model('crypto_model.keras')
+    # model = load_model('crypto_model.keras')
     past_100_days = data_train.tail(100)
 
     x_test, y_test = test_model(past_100_days, data_test, scaler)
 
+    x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+
     y_predict, y_test = make_prediction(model, x_test, y_test, scaler)
+
+    y_plot = y_predict[:, :, 0].flatten()  # This will convert y from shape (906, 100, 1) to (90600,)
 
     #Final Graph
     st.header('Predictions vs Original')
     fig_2 = plt.figure(figsize= (12,6))
     plt.plot(y_test, 'b', label = 'Original Price')
-    plt.plot(y_predict, 'r', label = 'Predicted Price')
+    plt.plot(y_plot, 'r', label = 'Predicted Price')
     plt.xlabel('Time')
     plt.ylabel('Price')
     plt.legend()
     st.pyplot(fig_2)
+   
