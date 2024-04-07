@@ -48,7 +48,7 @@ def train_model(df : pd.DataFrame, data_train : pd.DataFrame, scaler : MinMaxSca
 def make_model(x_train : np.array, y_train : np.array):
     try:
         model = Sequential() # initializing the type of model
-        model.add(LSTM(units= 50, activation= 'relu', return_sequences= True, input_shape= (x_train.shape[1], 1))) # adding first layer with ipu
+        model.add(LSTM(units= 50, activation= 'relu', return_sequences= True, input_shape= (x_train.shape[1], x_train.shape[2],1))) # adding first layer with ipu
         model.add(Dropout(0.2))
 
         model.add(LSTM(units= 60, activation= 'relu', return_sequences= True))
